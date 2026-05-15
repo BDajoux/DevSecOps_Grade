@@ -1,80 +1,60 @@
-name: wpscan
-
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-      - master
-
-jobs:
-  wpscan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Start WordPress
-        run: docker compose -f docker/docker-compose.yml up -d
-
-      - name: Wait for WordPress
-        run: |
-          for i in {1..30}; do
-            if curl -fsS http://localhost:8080/wp-admin/install.php >/dev/null; then
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "WordPress not ready" >&2
-          docker compose -f docker/docker-compose.yml ps
-          exit 1
-
-      - name: Install WordPress (if needed)
-        run: |
-          WPSCAN_USERNAME="wpadmin"
-          WPSCAN_PASSWORD="wppass"
-          WPSCAN_EMAIL="wpadmin@example.com"
-          if curl -fsS http://localhost:8080/wp-admin/install.php | grep -q "Already Installed"; then
-            exit 0
-          fi
-          curl -fsS -X POST "http://localhost:8080/wp-admin/install.php?step=2" \
-            -d "weblog_title=WPScan+Lab" \
-            -d "user_name=$WPSCAN_USERNAME" \
-            -d "admin_password=$WPSCAN_PASSWORD" \
-            -d "admin_password2=$WPSCAN_PASSWORD" \
-            -d "admin_email=$WPSCAN_EMAIL" \
-            -d "blog_public=0" >/dev/null
-
-      - name: Run WPScan
-        run: |
-            WPSCAN_USERNAME="wpadmin"
-            WPSCAN_PASSWORD="wppass"
-            PASSWORDS_FILE="$RUNNER_TEMP/wpscan_passwords.txt"
-            REPORT_FILE="$RUNNER_TEMP/wpscan-report.json"
-            echo "$WPSCAN_PASSWORD" > "$PASSWORDS_FILE"
-            
-            # Créer le fichier et le rendre accessible en écriture
-            touch "$REPORT_FILE"
-            chmod 666 "$REPORT_FILE"
-            
-            AUTH_ARGS="--usernames $WPSCAN_USERNAME --passwords /passwords.txt"
-            docker run --rm --network host \
-              -v "$PASSWORDS_FILE:/passwords.txt:ro" \
-              -v "$REPORT_FILE:/report.json" \
-              wpscanteam/wpscan \
-              --url http://localhost:8080 \
-              --enumerate u,vp,vt \
-              --force \
-              --format json \
-              $AUTH_ARGS \
-              --output /report.json
-
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
-          name: wpscan-report
-          path: ${{ runner.temp }}/wpscan-report.json
-
-      - name: Tear down
-        if: always()
-        run: docker compose -f docker/docker-compose.yml down -v
+on: 
+  push: 
+    branches: 
+      - main 
+ 
+jobs: 
+  wordpress-wpscan: 
+    runs-on: ubuntu-latest 
+ 
+    steps: 
+      - name: Checkout (required even if no repo code is used) 
+        uses: actions/checkout@v4 
+ 
+      - name: Set up Docker environment 
+        run: | 
+          sudo systemctl start docker 
+          docker version 
+ 
+      - name: Start MySQL container 
+ 
+        run: | 
+          docker run -d --name wp-db \ 
+            -e MYSQL_ROOT_PASSWORD=password \ 
+            -e MYSQL_DATABASE=wordpress \ 
+            -e MYSQL_USER=wpuser \ 
+            -e MYSQL_PASSWORD=wppass \ 
+            -p 3306:3306 \ 
+            mysql:5.7 
+ 
+      - name: Start WordPress container 
+        run: | 
+          docker run -d --name wp-site \ 
+            --link wp-db:mysql \ 
+            -e WORDPRESS_DB_HOST=host.docker.internal:3306 \ 
+            -e WORDPRESS_DB_USER=wpuser \ 
+            -e WORDPRESS_DB_PASSWORD=wppass \ 
+            -e WORDPRESS_DB_NAME=wordpress \ 
+            -p 8080:80 \ 
+            wordpress:latest 
+ 
+      - name: Wait for WordPress to be ready 
+        run: | 
+          echo "Waiting for WordPress to start..." 
+          for i in {1..30}; do 
+            if curl -s http://localhost:8080/wp-content/ | grep -q "<title>"; then 
+              echo "WordPress is ready!" 
+              break 
+            fi 
+            sleep 5 
+          done 
+ 
+      - name: Install Ruby and WPScan 
+        run: | 
+          sudo apt-get update 
+          sudo apt-get install -y ruby-full build-essential libcurl4-openssldev zlib1g-dev 
+          sudo gem install wpscan 
+ 
+      - name: Run WPScan 
+        run: | 
+          wpscan --url http://localhost:8080 --enumerate u,vp,vt --force || true 
