@@ -16,27 +16,8 @@ jobs:
           sudo systemctl start docker 
           docker version 
  
-      - name: Start MySQL container 
- 
-        run: | 
-          docker run -d --name wp_db \ 
-            -e MYSQL_ROOT_PASSWORD=password \ 
-            -e MYSQL_DATABASE=wordpress \ 
-            -e MYSQL_USER=wpuser \ 
-            -e MYSQL_PASSWORD=wppass \ 
-            -p 3306:3306 \ 
-            mysql:5.7 
- 
-      - name: Start WordPress container 
-        run: | 
-          docker run -d --name wp_app \ 
-            --link wp_db:mysql \ 
-            -e WORDPRESS_DB_HOST=host.docker.internal:3306 \ 
-            -e WORDPRESS_DB_USER=wpuser \ 
-            -e WORDPRESS_DB_PASSWORD=wppass \ 
-            -e WORDPRESS_DB_NAME=wordpress \ 
-            -p 8080:80 \ 
-            wordpress:latest 
+      - name: Start docker
+        run: docker compose -f docker/docker-compose.yml up -d
  
       - name: Wait for WordPress to be ready 
         run: | 
