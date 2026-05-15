@@ -22,7 +22,7 @@ jobs:
       - name: Install Ruby and WPScan 
         run: | 
           sudo apt-get update 
-          sudo apt-get install -y ruby-full build-essential libcurl4-openssldev zlib1g-dev 
+          sudo apt-get install -y ruby-full build-essential libcurl4-openssl-dev zlib1g-dev 
           sudo gem install wpscan 
  
       - name: Run WPScan 
