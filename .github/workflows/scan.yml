@@ -19,17 +19,6 @@ jobs:
       - name: Start docker
         run: docker compose -f docker/docker-compose.yml up -d
  
-      - name: Wait for WordPress to be ready 
-        run: | 
-          echo "Waiting for WordPress to start..." 
-          for i in {1..30}; do 
-            if curl -s http://localhost:8080/wp_content/ | grep -q "<title>"; then 
-              echo "WordPress is ready!" 
-              break 
-            fi 
-            sleep 5 
-          done 
- 
       - name: Install Ruby and WPScan 
         run: | 
           sudo apt-get update 
