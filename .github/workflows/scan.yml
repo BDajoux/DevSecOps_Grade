@@ -19,7 +19,7 @@ jobs:
       - name: Start MySQL container 
  
         run: | 
-          docker run -d --name wp-db \ 
+          docker run -d --name wp_db \ 
             -e MYSQL_ROOT_PASSWORD=password \ 
             -e MYSQL_DATABASE=wordpress \ 
             -e MYSQL_USER=wpuser \ 
@@ -29,8 +29,8 @@ jobs:
  
       - name: Start WordPress container 
         run: | 
-          docker run -d --name wp-site \ 
-            --link wp-db:mysql \ 
+          docker run -d --name wp_app \ 
+            --link wp_db:mysql \ 
             -e WORDPRESS_DB_HOST=host.docker.internal:3306 \ 
             -e WORDPRESS_DB_USER=wpuser \ 
             -e WORDPRESS_DB_PASSWORD=wppass \ 
@@ -42,7 +42,7 @@ jobs:
         run: | 
           echo "Waiting for WordPress to start..." 
           for i in {1..30}; do 
-            if curl -s http://localhost:8080/wp-content/ | grep -q "<title>"; then 
+            if curl -s http://localhost:8080/wp_content/ | grep -q "<title>"; then 
               echo "WordPress is ready!" 
               break 
             fi 
