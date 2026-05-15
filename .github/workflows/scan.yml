@@ -49,9 +49,12 @@ jobs:
         run: |
           WPSCAN_USERNAME="wpadmin"
           WPSCAN_PASSWORD="wppass"
-          echo "$WPSCAN_PASSWORD" > /tmp/wpscan_passwords.txt
-          AUTH_ARGS="--usernames $WPSCAN_USERNAME --passwords /tmp/wpscan_passwords.txt"
-          docker run --rm --network host wpscanteam/wpscan \
+          PASSWORDS_FILE="$RUNNER_TEMP/wpscan_passwords.txt"
+          echo "$WPSCAN_PASSWORD" > "$PASSWORDS_FILE"
+          AUTH_ARGS="--usernames $WPSCAN_USERNAME --passwords /passwords.txt"
+          docker run --rm --network host \
+            -v "$PASSWORDS_FILE:/passwords.txt:ro" \
+            wpscanteam/wpscan \
             --url http://localhost:8080 \
             --enumerate u,vp,vt \
             --force \
