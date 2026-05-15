@@ -18,6 +18,34 @@ jobs:
  
       - name: Start docker
         run: docker compose -f docker/docker-compose.yml up -d
+
+      - name: Wait for WordPress
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8080/wp-admin/install.php >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "WordPress not ready" >&2
+          docker compose -f docker/docker-compose.yml ps
+          exit 1
+
+      - name: Install WordPress (if needed)
+        run: |
+          WPSCAN_USERNAME="admin"
+          WPSCAN_PASSWORD="admin"
+          WPSCAN_EMAIL="admin@admin.com"
+          if curl -fsS http://localhost:8080/wp-admin/install.php | grep -q "Already Installed"; then
+            exit 0
+          fi
+          curl -fsS -X POST "http://localhost:8080/wp-admin/install.php?step=2" \
+            -d "weblog_title=WPScan+Lab" \
+            -d "user_name=$WPSCAN_USERNAME" \
+            -d "admin_password=$WPSCAN_PASSWORD" \
+            -d "admin_password2=$WPSCAN_PASSWORD" \
+            -d "admin_email=$WPSCAN_EMAIL" \
+            -d "blog_public=0" >/dev/null
  
       - name: Install Ruby and WPScan 
         run: | 
