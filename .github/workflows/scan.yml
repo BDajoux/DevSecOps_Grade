@@ -55,4 +55,11 @@ jobs:
  
       - name: Run WPScan 
         run: | 
-          wpscan --url http://localhost:8080 --enumerate u,vp,vt --force || true 
+          mkdir -p scans
+          wpscan --url http://localhost:8080 --enumerate u,vp,vt --force --format json --output scans/wpscan-report.json || true
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: wpscan-report
+          path: scans/wpscan-report.json
