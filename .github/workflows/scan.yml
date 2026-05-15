@@ -50,23 +50,25 @@ jobs:
           WPSCAN_USERNAME="wpadmin"
           WPSCAN_PASSWORD="wppass"
           PASSWORDS_FILE="$RUNNER_TEMP/wpscan_passwords.txt"
+          REPORT_FILE="$RUNNER_TEMP/wpscan-report.json"
           echo "$WPSCAN_PASSWORD" > "$PASSWORDS_FILE"
           AUTH_ARGS="--usernames $WPSCAN_USERNAME --passwords /passwords.txt"
           docker run --rm --network host \
             -v "$PASSWORDS_FILE:/passwords.txt:ro" \
+            -v "$REPORT_FILE:/report.json" \
             wpscanteam/wpscan \
             --url http://localhost:8080 \
             --enumerate u,vp,vt \
             --force \
             --format json \
             $AUTH_ARGS \
-            --output wpscan-report.json
+            --output /report.json
 
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
           name: wpscan-report
-          path: wpscan-report.json
+          path: ${{ runner.temp }}/wpscan-report.json
 
       - name: Tear down
         if: always()
