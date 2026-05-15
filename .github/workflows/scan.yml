@@ -29,18 +29,33 @@ jobs:
           docker compose -f docker/docker-compose.yml ps
           exit 1
 
-      - name: Run WPScan
-        env:
-          WPSCAN_API_TOKEN: ${{ secrets.WPSCAN_API_TOKEN }}
+      - name: Install WordPress (if needed)
         run: |
-          TOKEN_ARG=""
-          if [ -n "$WPSCAN_API_TOKEN" ]; then
-            TOKEN_ARG="--api-token $WPSCAN_API_TOKEN"
+          WPSCAN_USERNAME="wpadmin"
+          WPSCAN_PASSWORD="wppass"
+          WPSCAN_EMAIL="wpadmin@example.com"
+          if curl -fsS http://localhost:8080/wp-admin/install.php | grep -q "Already Installed"; then
+            exit 0
           fi
+          curl -fsS -X POST "http://localhost:8080/wp-admin/install.php?step=2" \
+            -d "weblog_title=WPScan+Lab" \
+            -d "user_name=$WPSCAN_USERNAME" \
+            -d "admin_password=$WPSCAN_PASSWORD" \
+            -d "admin_password2=$WPSCAN_PASSWORD" \
+            -d "admin_email=$WPSCAN_EMAIL" \
+            -d "blog_public=0" >/dev/null
+
+      - name: Run WPScan
+        run: |
+          WPSCAN_USERNAME="wpadmin"
+          WPSCAN_PASSWORD="wppass"
+          AUTH_ARGS="--username $WPSCAN_USERNAME --password $WPSCAN_PASSWORD"
           docker run --rm --network host wpscanteam/wpscan \
             --url http://localhost:8080 \
+            --enumerate u,vp,vt \
+            --force \
             --format json \
-            $TOKEN_ARG \
+            $AUTH_ARGS \
             --output wpscan-report.json
 
       - name: Upload report
