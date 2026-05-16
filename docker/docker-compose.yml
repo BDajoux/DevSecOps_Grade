@@ -25,7 +25,7 @@ services:
       - -c
       - |
         rm -f /var/www/html/readme.html /var/www/html/xmlrpc.php /var/www/html/wp-cron.php
-        exec apache2-foreground
+        exec /usr/local/bin/docker-entrypoint.sh apache2-foreground
     ports:
       - "8080:80"
     environment:
