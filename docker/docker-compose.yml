@@ -17,7 +17,7 @@ services:
       retries: 10
 
   wordpress:
-    image: ghcr.io/bdajoux/devsecops_grade:1.1.1
+    image: ghcr.io/bdajoux/devsecops_grade:1.1.0
     container_name: wp_app
     restart: unless-stopped
     command: ["apache2-foreground"]
