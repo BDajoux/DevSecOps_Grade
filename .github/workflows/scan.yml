@@ -30,7 +30,8 @@ jobs:
         run: |
           last_code=""
           for i in {1..30}; do
-            last_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || true)
+            last_code=$(curl -s --max-time 3 -o /dev/null -w "%{http_code}" http://localhost:8080/ || true)
+            echo "Attempt $i: status $last_code"
             if [ "$last_code" = "200" ] || [ "$last_code" = "301" ] || [ "$last_code" = "302" ]; then
               exit 0
             fi
@@ -38,6 +39,7 @@ jobs:
           done
           echo "WordPress not ready (last status: $last_code)" >&2
           docker compose -f docker/docker-compose.yml ps
+          docker compose -f docker/docker-compose.yml logs --no-color --tail 200 wordpress || true
           exit 1
 
       - name: Install WordPress (if needed)
