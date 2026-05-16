@@ -1,0 +1,19 @@
+# Basic hardening: block xmlrpc, readme, and wp-cron
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Block direct access to xmlrpc.php
+RewriteRule ^xmlrpc\.php$ - [F,L]
+
+# Block author ID enumeration (e.g., ?author=1)
+RewriteCond %{QUERY_STRING} (^|&)author=\d+(&|$) [NC]
+RewriteRule .* - [F,L]
+</IfModule>
+
+<Files "readme.html">
+Require all denied
+</Files>
+
+<Files "wp-cron.php">
+Require all denied
+</Files>

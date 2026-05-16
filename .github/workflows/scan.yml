@@ -1,7 +1,8 @@
-on: 
-  push: 
-    branches: 
-      - main 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
  
 jobs: 
   wordpress-wpscan: 
@@ -56,7 +57,7 @@ jobs:
       - name: Run WPScan 
         run: | 
           mkdir -p scans
-          wpscan --url http://localhost:8080 --enumerate u,vp,vt --force --format json --output scans/wpscan-report.json || true
+          wpscan --url http://localhost:8080 --api-token "i90aaKfnfRR57JTpfI4xcmAnB8Cc4n9nHWTnjDtZGdY" --enumerate u,vp,vt --force --format json --output scans/wpscan-report.json || true
 
       - name: Upload report
         uses: actions/upload-artifact@v4

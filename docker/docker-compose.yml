@@ -17,9 +17,10 @@ services:
       retries: 10
 
   wordpress:
-    image: wordpress:6.5.2-php8.2-apache
+    image: ghcr.io/bdajoux/devsecops_grade:1.1.0
     container_name: wp_app
     restart: unless-stopped
+    command: ["apache2-foreground"]
     ports:
       - "8080:80"
     environment:
@@ -32,6 +33,7 @@ services:
         condition: service_healthy
     volumes:
       - wp_data:/var/www/html
+      - ./wordpress/.htaccess:/var/www/html/.htaccess:ro
 
 volumes:
   db_data:
