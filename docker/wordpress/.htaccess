@@ -17,3 +17,5 @@ Require all denied
 <Files "wp-cron.php">
 Require all denied
 </Files>
+
+RedirectMatch 403 /wp-json/wp/v2/users
