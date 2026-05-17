@@ -16,6 +16,12 @@ RewriteRule .* - [F,L]
 # Block REST API users endpoint (permalink) and user sitemaps
 RewriteRule ^wp-json/wp/v2/users - [F,L]
 RewriteRule ^wp-sitemap-users-.*\.xml$ - [F,L]
+
+# Block RSS feeds to prevent user enumeration
+RewriteCond %{QUERY_STRING} (^|&)feed= [NC]
+RewriteRule .* - [F,L]
+RewriteRule ^feed/ - [F,L]
+RewriteRule ^.*/feed/(atom|rdf|rss|rss2)?/?$ - [F,L]
 </IfModule>
 
 <Files "readme.html">
